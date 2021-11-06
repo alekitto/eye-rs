@@ -1,4 +1,5 @@
-use std::time::Instant;
+use std::thread::sleep;
+use std::time::{Duration, Instant};
 
 use eye_hal::traits::{Context, Device, Stream};
 use eye_hal::{PlatformContext, Result};
@@ -30,10 +31,13 @@ fn main() -> Result<()> {
     let mut i = 0;
     loop {
         let t0 = Instant::now();
-        let frame = stream
-            .next()
-            .expect("Stream is dead")
-            .expect("Failed to capture frame");
+        let next_frame = stream.next();
+        if next_frame.is_none() {
+            sleep(Duration::from_millis(1));
+            continue;
+        }
+
+        let frame = next_frame.unwrap().expect("Failed to capture frame");
         let duration_us = t0.elapsed().as_micros();
 
         let cur = frame.as_bytes().len() as f64 / 1_048_576.0 * 1_000_000.0 / duration_us as f64;
