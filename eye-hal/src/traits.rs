@@ -19,7 +19,10 @@ pub trait Device<'a> {
     fn streams(&self) -> Result<Vec<stream::Descriptor>>;
 
     /// Returns a stream which produces images
-    fn start_stream(&self, desc: &stream::Descriptor) -> Result<PlatformStream<'a>>;
+    fn start_stream(
+        &self,
+        settings: stream::DeviceStreamSettings<'_>,
+    ) -> Result<PlatformStream<'a>>;
 
     /// Returns the supported controls
     fn controls(&self) -> Result<Vec<control::Descriptor>>;

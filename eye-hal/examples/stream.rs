@@ -1,6 +1,7 @@
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
+use eye_hal::stream::DeviceStreamSettings;
 use eye_hal::traits::{Context, Device, Stream};
 use eye_hal::{PlatformContext, Result};
 
@@ -23,7 +24,10 @@ fn main() -> Result<()> {
     // Since we want to capture images, we need to access the native image stream of the device.
     // The backend will internally select a suitable implementation for the platform stream. On
     // Linux for example, most devices support memory-mapped buffers.
-    let mut stream = dev.start_stream(&stream_desc)?;
+    let mut stream = dev.start_stream(DeviceStreamSettings {
+        desc: &stream_desc,
+        buffers_count: None,
+    })?;
 
     // Here we create a loop and just capture images as long as the device produces them. Normally,
     // this loop will run forever unless we unplug the camera or exit the program.

@@ -14,9 +14,12 @@ pub struct Handle<'a> {
 impl<'a> Handle<'a> {
     pub fn new(dev: &DeviceHandle) -> Result<Self> {
         let stream = MmapStream::new(dev.inner(), BufType::VideoCapture)?;
-        Ok(Handle {
-            stream,
-        })
+        Ok(Handle { stream })
+    }
+
+    pub fn with_buffers(dev: &DeviceHandle, buf_count: u32) -> Result<Self> {
+        let stream = MmapStream::with_buffers(dev.inner(), BufType::VideoCapture, buf_count)?;
+        Ok(Handle { stream })
     }
 }
 

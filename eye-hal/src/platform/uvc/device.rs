@@ -100,7 +100,8 @@ impl<'a> Device<'a> for Handle<'a> {
         Err(Error::from(ErrorKind::NotSupported))
     }
 
-    fn start_stream(&self, desc: &stream::Descriptor) -> Result<PlatformStream<'a>> {
+    fn start_stream(&self, settings: stream::DeviceStreamSettings) -> Result<PlatformStream<'a>> {
+        let desc = settings.desc;
         let dev_handle = self.inner.clone();
         let dev_handle_ptr = &*dev_handle.handle as *const uvc::DeviceHandle;
         let dev_handle_ref = unsafe { &*dev_handle_ptr as &uvc::DeviceHandle };
@@ -132,7 +133,11 @@ impl<'a> Device<'a> for Handle<'a> {
             Err(e) => return Err(Error::new(ErrorKind::Other, e)),
         };
 
-        match StreamHandle::new(dev_handle, stream_handle) {
+        match StreamHandle::new(
+            dev_handle,
+            stream_handle,
+            settings.buffers_count.unwrap_or(0),
+        ) {
             Ok(handle) => Ok(PlatformStream::Uvc(handle)),
             Err(e) => Err(Error::new(ErrorKind::Other, e)),
         }

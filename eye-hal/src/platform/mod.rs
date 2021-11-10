@@ -8,7 +8,7 @@ use crate::buffer::Buffer;
 use crate::control;
 use crate::device;
 use crate::error::Result;
-use crate::stream::Descriptor as StreamDescriptor;
+use crate::stream;
 use crate::traits::{Context as ContextTrait, Device as DeviceTrait, Stream as StreamTrait};
 
 #[cfg(target_os = "linux")]
@@ -95,7 +95,7 @@ pub enum Device<'a> {
 }
 
 impl<'a> DeviceTrait<'a> for Device<'a> {
-    fn streams(&self) -> Result<Vec<StreamDescriptor>> {
+    fn streams(&self) -> Result<Vec<stream::Descriptor>> {
         match self {
             Self::Custom(dev) => dev.streams(),
             #[cfg(target_os = "linux")]
@@ -135,13 +135,13 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
         }
     }
 
-    fn start_stream(&self, desc: &StreamDescriptor) -> Result<Stream<'a>> {
+    fn start_stream(&self, settings: stream::DeviceStreamSettings) -> Result<Stream<'a>> {
         match self {
-            Self::Custom(dev) => dev.start_stream(desc),
+            Self::Custom(dev) => dev.start_stream(settings),
             #[cfg(target_os = "linux")]
-            Self::V4l2(dev) => dev.start_stream(desc),
+            Self::V4l2(dev) => dev.start_stream(settings),
             #[cfg(feature = "plat-uvc")]
-            Self::Uvc(dev) => dev.start_stream(desc),
+            Self::Uvc(dev) => dev.start_stream(settings),
         }
     }
 }

@@ -18,12 +18,13 @@ impl<'a> Handle<'a> {
     pub fn new(
         dev_handle: Arc<UvcHandle<'a>>,
         mut stream_handle: uvc::StreamHandle<'a>,
+        buf_count: usize,
     ) -> uvc::Result<Self> {
         let stream_handle_ptr = &mut stream_handle as *mut uvc::StreamHandle;
         let stream_handle_ref = unsafe { &mut *stream_handle_ptr as &mut uvc::StreamHandle };
 
         // establish a rendezvous channel
-        let (tx, rx) = mpsc::sync_channel(0);
+        let (tx, rx) = mpsc::sync_channel(buf_count);
         let stream = stream_handle_ref.start_stream(
             |frame, tx| {
                 match tx.send(frame.to_rgb()) {

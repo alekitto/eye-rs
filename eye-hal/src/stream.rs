@@ -14,3 +14,10 @@ pub struct Descriptor {
     /// Frame timing as duration
     pub interval: time::Duration,
 }
+
+#[derive(Clone, Debug)]
+/// Stream settings, needed on stream open operation.
+pub struct DeviceStreamSettings<'a> {
+    pub desc: &'a Descriptor,
+    pub buffers_count: Option<usize>,
+}

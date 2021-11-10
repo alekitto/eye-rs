@@ -13,7 +13,7 @@ use crate::error::{Error, ErrorKind, Result};
 use crate::format::PixelFormat;
 use crate::platform::v4l2::stream::Handle as StreamHandle;
 use crate::platform::Stream as PlatformStream;
-use crate::stream::Descriptor as StreamDescriptor;
+use crate::stream;
 use crate::traits::Device;
 
 pub struct Handle {
@@ -51,7 +51,7 @@ impl Handle {
 }
 
 impl<'a> Device<'a> for Handle {
-    fn streams(&self) -> Result<Vec<StreamDescriptor>> {
+    fn streams(&self) -> Result<Vec<stream::Descriptor>> {
         let mut streams = Vec::new();
         let plat_formats = self.inner.enum_formats()?;
 
@@ -67,7 +67,7 @@ impl<'a> Device<'a> for Handle {
                         if let v4l::frameinterval::FrameIntervalEnum::Discrete(fraction) =
                             frameinterval.interval
                         {
-                            streams.push(StreamDescriptor {
+                            streams.push(stream::Descriptor {
                                 width: size.width,
                                 height: size.height,
                                 pixfmt: PixelFormat::from(&format.fourcc.repr),
@@ -182,7 +182,11 @@ impl<'a> Device<'a> for Handle {
         Ok(())
     }
 
-    fn start_stream(&self, desc: &StreamDescriptor) -> Result<PlatformStream<'a>> {
+    fn start_stream(
+        &self,
+        settings: stream::DeviceStreamSettings<'_>,
+    ) -> Result<PlatformStream<'a>> {
+        let desc = settings.desc;
         let fourcc = if let Ok(fourcc) = desc.pixfmt.clone().try_into() {
             fourcc
         } else {
@@ -201,7 +205,7 @@ impl<'a> Device<'a> for Handle {
         params.interval = v4l::Fraction::new(1, fps);
         self.inner.set_params(&params)?;
 
-        let handle = StreamHandle::new(self)?;
+        let handle = StreamHandle::with_buffers(self, settings.buffers_count.unwrap_or(4) as u32)?;
         Ok(PlatformStream::V4l2(handle))
     }
 }

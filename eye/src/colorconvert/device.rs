@@ -71,14 +71,15 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
         Ok(streams)
     }
 
-    fn start_stream(&self, desc: &stream::Descriptor) -> Result<PlatformStream<'a>> {
+    fn start_stream(&self, settings: stream::DeviceStreamSettings) -> Result<PlatformStream<'a>> {
+        let desc = settings.desc;
         let native_streams = self.inner.streams()?;
         if let Some(_) = native_streams
             .iter()
             .find(|stream| stream.pixfmt == desc.pixfmt)
         {
             // no emulation required
-            return self.inner.start_stream(desc);
+            return self.inner.start_stream(settings);
         }
 
         // find a supported format mapping
@@ -148,7 +149,10 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
         // start the native stream with the base pixfmt
         let mut source_fmt = desc.clone();
         source_fmt.pixfmt = src_fmt;
-        let native_stream = self.inner.start_stream(&source_fmt)?;
+        let native_stream = self.inner.start_stream(stream::DeviceStreamSettings {
+            desc: &source_fmt,
+            buffers_count: settings.buffers_count.clone(),
+        })?;
 
         // create the instance that converts the frames for us
         return Ok(PlatformStream::Custom(Box::new(CodecStream {
